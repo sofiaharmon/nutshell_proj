@@ -50,7 +50,8 @@ extern int yydebug;
     CD = 260,
     END = 261,
     LS = 262,
-    STRING = 263
+    STRING = 263,
+    UNALIAS = 264
   };
 #endif
 
@@ -59,10 +60,10 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 17 "parser.y" /* yacc.c:1909  */
+#line 19 "parser.y" /* yacc.c:1909  */
 char *string;
 
-#line 66 "parser.tab.h" /* yacc.c:1909  */
+#line 67 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

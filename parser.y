@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <dirent.h>
+#include "stdbool.h"
 #include "vars.h"
 
 int yylex();
@@ -12,21 +13,23 @@ int runCD(char* arg);
 int runLS();
 int runSetAlias(char *name, char *word);
 int listAlias();
+int runUnalias(char *arg); 
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> ALIAS BYE CD END LS STRING 
+%token <string> ALIAS BYE CD END LS STRING UNALIAS
 
 %%
 
 cmd_line    :
-    BYE END                        {exit(1); return 1;}
+    BYE END                         {exit(1); return 1;}
     | CD STRING END                 {runCD($2); return 1;}
     | LS END                        {runLS(); return 1;}
     | ALIAS STRING STRING END		{runSetAlias($2, $3); return 1;}
-    | ALIAS                         {listAlias(); return 1;}
+    | ALIAS END                     {listAlias(); return 1;}
+    | UNALIAS STRING END            {runUnalias($2); return 1;}
 
 %%
 
@@ -124,5 +127,29 @@ int listAlias() {
         printf("alias %s = \"%s\"\n", aliasTable.name[i], aliasTable.word[i]);
     }
 
+    return 1;
+}
+
+int runUnalias(char *arg) {
+    int j = 0;
+    bool found = false;
+    for (int i = 0; i < aliasIndex; i++) {
+        if (strcmp(aliasTable.word[i], arg) == 0) {
+            j = i;
+            found = true;
+        }
+    }
+    
+    if (found) {
+        for (j; j < aliasIndex - 2; j++) {
+            strcpy(aliasTable.name[j], aliasTable.name[j+1]);
+            strcpy(aliasTable.word[j], aliasTable.word[j+1]);
+        }
+
+        aliasIndex--;
+    }
+    else {
+        printf("Error: \"%s\" not found\n", arg);
+    }
     return 1;
 }
