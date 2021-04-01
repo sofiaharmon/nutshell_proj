@@ -11,6 +11,7 @@ int yyerror(char *s);
 int runCD(char* arg);
 int runLS();
 int runSetAlias(char *name, char *word);
+int listAlias();
 %}
 
 %union {char *string;}
@@ -25,6 +26,7 @@ cmd_line    :
     | CD STRING END                 {runCD($2); return 1;}
     | LS END                        {runLS(); return 1;}
     | ALIAS STRING STRING END		{runSetAlias($2, $3); return 1;}
+    | ALIAS                         {listAlias(); return 1;}
 
 %%
 
@@ -112,6 +114,15 @@ int runLS() {
     }
     free(namelist);
 
+
+    return 1;
+}
+
+int listAlias() {
+
+    for (int i = 0; i < aliasIndex; i++) {
+        printf("alias %s = \"%s\"\n", aliasTable.name[i], aliasTable.word[i]);
+    }
 
     return 1;
 }
