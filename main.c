@@ -11,7 +11,7 @@ int main()
     init();
     system("clear");
 
-    while (true)
+    while (1)
     {
         printPrompt();       
         yyparse();
