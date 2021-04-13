@@ -30,6 +30,7 @@ cmd_line    :
     | ALIAS STRING STRING END		{runSetAlias($2, $3); return 1;}
     | ALIAS END                     {listAlias(); return 1;}
     | UNALIAS STRING END            {runUnalias($2); return 1;}
+    | STRING END                    {printf($1); return 1;}
 
 %%
 

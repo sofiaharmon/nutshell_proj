@@ -20,6 +20,14 @@ bool ifAlias(char* name){
     }
     return false;
 }
+char* subEnv(char* var){
+    for (int i = 0; i < varIndex; i++) {
+        if(strcmp(varTable.var[i], var) == 0) {
+            return varTable.word[i];
+        }
+    }
+    return var;
+}
 %}
 
 %array
@@ -27,13 +35,28 @@ bool ifAlias(char* name){
 
 CHAR            [.A-Za-z0-9!\/_-][.A-Za-z0-9!\/_-]*
 ANYCHAR         [)(*&%$#@!`;,\.a-zA-Z0-9'/*_=~ -][)(*&%$#@!`;,\.a-zA-Z0-9'/*_=~ -]*
+PIPE            [|]
+FILE_OUT        [>]
+FILE_IN         [<]
+BACKGROUND      [&]
 
 %x string_condition
+%x env_condition
 
 %%
 
 <string_condition>{ANYCHAR}+     { yylval.string = strdup(yytext); return STRING;}
 <string_condition>[\"]           {BEGIN(INITIAL);}
+
+<env_condition>[\{]              { }
+<env_condition>{ANYCHAR}+        { yylval.string = strdup(subEnv(yytext)); }
+<env_condition>[\}]              {  char *yycopy = strdup( yylval.string );
+                                    for ( int i = strlen(yylval.string) - 1; i >= 0; --i ) {
+                                        unput( yycopy[i] );
+                                    }
+                                    free( yycopy );
+                                    BEGIN(INITIAL);
+                                }
 
 [ ]		            { }
 bye                { return BYE; }
@@ -43,6 +66,7 @@ alias		        { return ALIAS; }
 unalias             { return UNALIAS; }
 "\n"		        { return END; }
 [\"]                 { BEGIN(string_condition); }
+[$]                 {BEGIN(env_condition);}
 {CHAR}+              {if(ifAlias(yytext)) {
                         printf("yytext before sub: %s\n", yytext);
                            char *yycopy = strdup( subAliases(yytext) );
