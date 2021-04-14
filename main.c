@@ -41,6 +41,7 @@ void init()
 {
     aliasIndex = 0;
     varIndex = 0;
+    cmdFill = 0;
     char cwd[PATH_MAX];
     getcwd(cwd, sizeof(cwd));
 

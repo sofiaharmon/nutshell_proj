@@ -1,0 +1,4 @@
+est file:
+arg[0]: ./tst
+arg[1]: hi
+arg[2]: lol

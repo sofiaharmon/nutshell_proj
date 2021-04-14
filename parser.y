@@ -1,4 +1,6 @@
 %{
+
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,12 +16,17 @@ int runLS();
 int runSetAlias(char *name, char *word);
 int listAlias();
 int runUnalias(char *arg); 
+int createTable(char *arg);
+int addOutFile(char *fileName);
+int addInFile(char *fileName);
+int executeCmd();
+int clrTable();
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> ALIAS BYE CD END LS STRING UNALIAS
+%token <string> ALIAS BYE CD END IN LS OUT STRING UNALIAS
 
 %%
 
@@ -30,12 +37,15 @@ cmd_line    :
     | ALIAS STRING STRING END		{runSetAlias($2, $3); return 1;}
     | ALIAS END                     {listAlias(); return 1;}
     | UNALIAS STRING END            {runUnalias($2); return 1;}
-    | STRING END                    {printf($1); return 1;}
+    | STRING                        {createTable($1); yyparse(); return 1;}
+    | OUT STRING                    {addOutFile($2); yyparse(); return 1;}
+    | IN STRING                     {addInFile($2); yyparse(); return 1;}
+    | END                           {executeCmd(); clrTable(); return 1;}
 
 %%
 
 int yyerror(char *s) {
-    printf("%s\n", s);
+    //printf("%s\n", s);
     return 0;
 }
 
@@ -151,6 +161,119 @@ int runUnalias(char *arg) {
     }
     else {
         printf("Error: \"%s\" not found\n", arg);
+    }
+    return 1;
+}
+
+int createTable(char* arg) {
+    
+    if (cmdFill == 0) {
+        strcpy(cmdTable.cmdName, arg);
+        cmdFill = 1;
+        strcpy(cmdTable.args[0], arg);
+        cmdTable.argCount = 1;
+        cmdTable.isIn = 0;
+        cmdTable.isOut = 0;
+    }
+    else {
+        strcpy(cmdTable.args[cmdTable.argCount], arg);
+        cmdTable.argCount += 1;
+    }
+    
+    return 1;
+}
+
+int addOutFile(char *fileName) {
+    if (fileName) {
+        cmdTable.isOut = 1;
+        strcpy(cmdTable.fileOut, fileName);
+    }
+
+    return 1;
+}
+
+int addInFile(char *fileName) {
+    if (fileName) {
+        cmdTable.isIn = 1;
+        strcpy(cmdTable.fileIn, fileName);
+    }
+
+    in = dup(STDIN_FILENO);
+
+    
+    //wait(NULL);
+
+    return 1;
+}
+
+int executeCmd() {
+    
+    if (cmdFill == 1) {
+        if (fork() == 0) {
+            
+            if(cmdTable.isOut == 1) {
+                int fd;
+
+                fd = creat(cmdTable.fileOut, 0644);
+                if (fd < 0) {
+                    printf("error opening %s\n", cmdTable.fileOut);
+                }
+                dup2(fd, STDOUT_FILENO);
+            
+                if (fd != STDOUT_FILENO) {
+                    close(fd);
+                }
+            }
+
+            if(cmdTable.isIn == 1) {
+                int fd0 = open(cmdTable.fileIn, O_RDONLY);
+                dup2(fd0, 0);
+                close(fd0);
+                cmdTable.isIn = 0;
+                yyparse();
+            }
+
+            //for the case of inside the yyparse(), to avoid infinite loop
+            if (cmdFill == 0) {
+                exit(EXIT_FAILURE);
+            }
+
+            char *newArg[100];
+            for (int i = 0; i < cmdTable.argCount; i++) {
+            newArg[i] = cmdTable.args[i];
+            }
+            newArg[cmdTable.argCount] = NULL;
+
+            char *env_args[] = { NULL };
+
+            int check = execve(cmdTable.cmdName, newArg, env_args);
+            if (check < 0) {
+                perror("execve");
+                printf("%s: No such file or directory\n", cmdTable.cmdName);
+                exit(EXIT_FAILURE);
+            }
+        }
+        else {
+            wait(NULL);
+            
+        }
+    }
+    return 1;
+}
+
+int clrTable() {
+    if (cmdFill == 1) {
+        cmdFill = 0;
+        strcpy(cmdTable.cmdName, "");
+
+        for (int i = 0; i < cmdTable.argCount; i++) {
+            strcpy(cmdTable.args[i], "");
+        }
+        cmdTable.argCount = 0;
+        cmdTable.isOut = 0;
+        cmdTable.isIn = 0;
+        strcpy(cmdTable.fileIn, "");
+        strcpy(cmdTable.fileOut, "");
     }
     return 1;
 }

@@ -64,6 +64,8 @@
 /* Copy the first part of user declarations.  */
 #line 1 "parser.y" /* yacc.c:339  */
 
+
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -79,8 +81,13 @@ int runLS();
 int runSetAlias(char *name, char *word);
 int listAlias();
 int runUnalias(char *arg); 
+int createTable(char *arg);
+int addOutFile(char *fileName);
+int addInFile(char *fileName);
+int executeCmd();
+int clrTable();
 
-#line 84 "parser.tab.c" /* yacc.c:339  */
+#line 91 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -119,9 +126,11 @@ extern int yydebug;
     BYE = 259,
     CD = 260,
     END = 261,
-    LS = 262,
-    STRING = 263,
-    UNALIAS = 264
+    IN = 262,
+    LS = 263,
+    OUT = 264,
+    STRING = 265,
+    UNALIAS = 266
   };
 #endif
 
@@ -130,10 +139,10 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 19 "parser.y" /* yacc.c:355  */
+#line 26 "parser.y" /* yacc.c:355  */
 char *string;
 
-#line 137 "parser.tab.c" /* yacc.c:355  */
+#line 146 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -150,7 +159,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 154 "parser.tab.c" /* yacc.c:358  */
+#line 163 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -390,23 +399,23 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  15
+#define YYFINAL  19
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   19
+#define YYLAST   21
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  10
+#define YYNTOKENS  12
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  2
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  8
+#define YYNRULES  11
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  20
+#define YYNSTATES  24
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   264
+#define YYMAXUTOK   266
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -441,14 +450,15 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9
+       5,     6,     7,     8,     9,    10,    11
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    27,    27,    28,    29,    30,    31,    32,    33
+       0,    34,    34,    35,    36,    37,    38,    39,    40,    41,
+      42,    43
 };
 #endif
 
@@ -457,8 +467,8 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "ALIAS", "BYE", "CD", "END", "LS",
-  "STRING", "UNALIAS", "$accept", "cmd_line", YY_NULLPTR
+  "$end", "error", "$undefined", "ALIAS", "BYE", "CD", "END", "IN", "LS",
+  "OUT", "STRING", "UNALIAS", "$accept", "cmd_line", YY_NULLPTR
 };
 #endif
 
@@ -467,14 +477,15 @@ static const char *const yytname[] =
    (internal) symbol number NUM (which must be that of a token).  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260,   261,   262,   263,   264
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     265,   266
 };
 # endif
 
-#define YYPACT_NINF -6
+#define YYPACT_NINF -4
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-6)))
+  (!!((Yystate) == (-4)))
 
 #define YYTABLE_NINF -1
 
@@ -485,8 +496,9 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -3,     1,     2,    -5,     4,     5,     6,    12,    -6,     7,
-      -6,    10,    -6,    -6,    11,    -6,    13,    -6,    -6,    -6
+      -3,     3,     4,     1,    -4,     2,     8,     5,    -4,     6,
+      17,    -4,     9,    -4,    12,    -4,    -4,    -4,    14,    -4,
+      15,    -4,    -4,    -4
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -494,20 +506,21 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,     0,     0,     0,     0,     0,     0,     0,     6,     0,
-       2,     0,     4,     8,     0,     1,     0,     3,     7,     5
+       0,     0,     0,     0,    11,     0,     0,     0,     8,     0,
+       0,     6,     0,     2,     0,    10,     4,     9,     0,     1,
+       0,     3,     7,     5
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -6,    -6
+      -4,    -4
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     7
+      -1,    10
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -515,34 +528,39 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-       1,     2,     3,    11,     4,     5,     6,     8,    10,     9,
-      12,    13,    15,     0,    14,    16,    17,    18,     0,    19
+       1,     2,     3,     4,     5,     6,     7,     8,     9,    11,
+      13,    14,    15,    12,    16,    17,    18,    19,    21,    20,
+      22,    23
 };
 
-static const yytype_int8 yycheck[] =
+static const yytype_uint8 yycheck[] =
 {
-       3,     4,     5,     8,     7,     8,     9,     6,     6,     8,
-       6,     6,     0,    -1,     8,     8,     6,     6,    -1,     6
+       3,     4,     5,     6,     7,     8,     9,    10,    11,     6,
+       6,    10,    10,    10,     6,    10,    10,     0,     6,    10,
+       6,     6
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     3,     4,     5,     7,     8,     9,    11,     6,     8,
-       6,     8,     6,     6,     8,     0,     8,     6,     6,     6
+       0,     3,     4,     5,     6,     7,     8,     9,    10,    11,
+      13,     6,    10,     6,    10,    10,     6,    10,    10,     0,
+      10,     6,     6,     6
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    10,    11,    11,    11,    11,    11,    11,    11
+       0,    12,    13,    13,    13,    13,    13,    13,    13,    13,
+      13,    13
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     2,     3,     2,     4,     2,     3,     2
+       0,     2,     2,     3,     2,     4,     2,     3,     1,     2,
+       2,     1
 };
 
 
@@ -1219,49 +1237,67 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 27 "parser.y" /* yacc.c:1646  */
+#line 34 "parser.y" /* yacc.c:1646  */
     {exit(1); return 1;}
-#line 1225 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 3:
-#line 28 "parser.y" /* yacc.c:1646  */
-    {runCD((yyvsp[-1].string)); return 1;}
-#line 1231 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 4:
-#line 29 "parser.y" /* yacc.c:1646  */
-    {runLS(); return 1;}
-#line 1237 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 5:
-#line 30 "parser.y" /* yacc.c:1646  */
-    {runSetAlias((yyvsp[-2].string), (yyvsp[-1].string)); return 1;}
 #line 1243 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 6:
-#line 31 "parser.y" /* yacc.c:1646  */
-    {listAlias(); return 1;}
+  case 3:
+#line 35 "parser.y" /* yacc.c:1646  */
+    {runCD((yyvsp[-1].string)); return 1;}
 #line 1249 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 7:
-#line 32 "parser.y" /* yacc.c:1646  */
-    {runUnalias((yyvsp[-1].string)); return 1;}
+  case 4:
+#line 36 "parser.y" /* yacc.c:1646  */
+    {runLS(); return 1;}
 #line 1255 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 8:
-#line 33 "parser.y" /* yacc.c:1646  */
-    {printf((yyvsp[-1].string)); return 1;}
+  case 5:
+#line 37 "parser.y" /* yacc.c:1646  */
+    {runSetAlias((yyvsp[-2].string), (yyvsp[-1].string)); return 1;}
 #line 1261 "parser.tab.c" /* yacc.c:1646  */
     break;
 
+  case 6:
+#line 38 "parser.y" /* yacc.c:1646  */
+    {listAlias(); return 1;}
+#line 1267 "parser.tab.c" /* yacc.c:1646  */
+    break;
 
-#line 1265 "parser.tab.c" /* yacc.c:1646  */
+  case 7:
+#line 39 "parser.y" /* yacc.c:1646  */
+    {runUnalias((yyvsp[-1].string)); return 1;}
+#line 1273 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 8:
+#line 40 "parser.y" /* yacc.c:1646  */
+    {createTable((yyvsp[0].string)); yyparse(); return 1;}
+#line 1279 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 9:
+#line 41 "parser.y" /* yacc.c:1646  */
+    {addOutFile((yyvsp[0].string)); yyparse(); return 1;}
+#line 1285 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 10:
+#line 42 "parser.y" /* yacc.c:1646  */
+    {addInFile((yyvsp[0].string)); yyparse(); return 1;}
+#line 1291 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 11:
+#line 43 "parser.y" /* yacc.c:1646  */
+    {executeCmd(); clrTable(); return 1;}
+#line 1297 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+
+#line 1301 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1489,11 +1525,11 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 35 "parser.y" /* yacc.c:1906  */
+#line 45 "parser.y" /* yacc.c:1906  */
 
 
 int yyerror(char *s) {
-    printf("%s\n", s);
+    //printf("%s\n", s);
     return 0;
 }
 
@@ -1609,6 +1645,119 @@ int runUnalias(char *arg) {
     }
     else {
         printf("Error: \"%s\" not found\n", arg);
+    }
+    return 1;
+}
+
+int createTable(char* arg) {
+    
+    if (cmdFill == 0) {
+        strcpy(cmdTable.cmdName, arg);
+        cmdFill = 1;
+        strcpy(cmdTable.args[0], arg);
+        cmdTable.argCount = 1;
+        cmdTable.isIn = 0;
+        cmdTable.isOut = 0;
+    }
+    else {
+        strcpy(cmdTable.args[cmdTable.argCount], arg);
+        cmdTable.argCount += 1;
+    }
+    
+    return 1;
+}
+
+int addOutFile(char *fileName) {
+    if (fileName) {
+        cmdTable.isOut = 1;
+        strcpy(cmdTable.fileOut, fileName);
+    }
+
+    return 1;
+}
+
+int addInFile(char *fileName) {
+    if (fileName) {
+        cmdTable.isIn = 1;
+        strcpy(cmdTable.fileIn, fileName);
+    }
+
+    in = dup(STDIN_FILENO);
+
+    
+    //wait(NULL);
+
+    return 1;
+}
+
+int executeCmd() {
+    
+    if (cmdFill == 1) {
+        if (fork() == 0) {
+            
+            if(cmdTable.isOut == 1) {
+                int fd;
+
+                fd = creat(cmdTable.fileOut, 0644);
+                if (fd < 0) {
+                    printf("error opening %s\n", cmdTable.fileOut);
+                }
+                dup2(fd, STDOUT_FILENO);
+            
+                if (fd != STDOUT_FILENO) {
+                    close(fd);
+                }
+            }
+
+            if(cmdTable.isIn == 1) {
+                int fd0 = open(cmdTable.fileIn, O_RDONLY);
+                dup2(fd0, 0);
+                close(fd0);
+                cmdTable.isIn = 0;
+                yyparse();
+            }
+
+            //for the case of inside the yyparse(), to avoid infinite loop
+            if (cmdFill == 0) {
+                exit(EXIT_FAILURE);
+            }
+
+            char *newArg[100];
+            for (int i = 0; i < cmdTable.argCount; i++) {
+            newArg[i] = cmdTable.args[i];
+            }
+            newArg[cmdTable.argCount] = NULL;
+
+            char *env_args[] = { NULL };
+
+            int check = execve(cmdTable.cmdName, newArg, env_args);
+            if (check < 0) {
+                perror("execve");
+                printf("%s: No such file or directory\n", cmdTable.cmdName);
+                exit(EXIT_FAILURE);
+            }
+        }
+        else {
+            wait(NULL);
+            
+        }
+    }
+    return 1;
+}
+
+int clrTable() {
+    if (cmdFill == 1) {
+        cmdFill = 0;
+        strcpy(cmdTable.cmdName, "");
+
+        for (int i = 0; i < cmdTable.argCount; i++) {
+            strcpy(cmdTable.args[i], "");
+        }
+        cmdTable.argCount = 0;
+        cmdTable.isOut = 0;
+        cmdTable.isIn = 0;
+        strcpy(cmdTable.fileIn, "");
+        strcpy(cmdTable.fileOut, "");
     }
     return 1;
 }

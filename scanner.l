@@ -56,16 +56,22 @@ BACKGROUND      [&]
                                     }
                                     free( yycopy );
                                     BEGIN(INITIAL);
-                                }
+                                 }
 
 [ ]		            { }
-bye                { return BYE; }
+bye                 { return BYE; }
 cd		            { return CD; }
 ls                  { return LS; }
 alias		        { return ALIAS; }
 unalias             { return UNALIAS; }
 "\n"		        { return END; }
-[\"]                 { BEGIN(string_condition); }
+[\"]                { BEGIN(string_condition); }
+[~]                 { char *yycopy = strdup( subEnv("HOME") );
+                      for ( int i = strlen(subEnv("HOME")) - 1; i >= 0; --i ) {
+                        unput( yycopy[i] );
+                      }
+                      free( yycopy );
+                    }
 [$]                 {BEGIN(env_condition);}
 {CHAR}+              {if(ifAlias(yytext)) {
                         printf("yytext before sub: %s\n", yytext);
@@ -74,9 +80,11 @@ unalias             { return UNALIAS; }
                                unput( yycopy[i] );
                            free( yycopy );
                     } else {
-                        printf("yytext: %s\n", yytext);
+                        //printf("yytext: %s\n", yytext);
                         yylval.string = strdup(yytext);
                         return STRING;
                     };
-                     }
+                    }
+{FILE_OUT}          { return OUT; }
+{FILE_IN}           { return IN; }
 %%
