@@ -72,7 +72,7 @@ unalias             { return UNALIAS; }
                       }
                       free( yycopy );
                     }
-[$]                 {BEGIN(env_condition);}
+[$]/[\{]                {BEGIN(env_condition);}
 {CHAR}+              {if(ifAlias(yytext)) {
                         printf("yytext before sub: %s\n", yytext);
                            char *yycopy = strdup( subAliases(yytext) );

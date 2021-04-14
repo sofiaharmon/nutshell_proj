@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "stdbool.h"
 #include "vars.h"
 
@@ -198,10 +200,7 @@ int addInFile(char *fileName) {
         strcpy(cmdTable.fileIn, fileName);
     }
 
-    in = dup(STDIN_FILENO);
-
-    
-    //wait(NULL);
+//    in = dup(STDIN_FILENO);
 
     return 1;
 }
@@ -227,7 +226,7 @@ int executeCmd() {
 
             if(cmdTable.isIn == 1) {
                 int fd0 = open(cmdTable.fileIn, O_RDONLY);
-                dup2(fd0, 0);
+                dup2(fd0, STDIN_FILENO);
                 close(fd0);
                 cmdTable.isIn = 0;
                 yyparse();

@@ -71,6 +71,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "stdbool.h"
 #include "vars.h"
 
@@ -87,7 +89,7 @@ int addInFile(char *fileName);
 int executeCmd();
 int clrTable();
 
-#line 91 "parser.tab.c" /* yacc.c:339  */
+#line 93 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -139,10 +141,10 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 26 "parser.y" /* yacc.c:355  */
+#line 28 "parser.y" /* yacc.c:355  */
 char *string;
 
-#line 146 "parser.tab.c" /* yacc.c:355  */
+#line 148 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -159,7 +161,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 163 "parser.tab.c" /* yacc.c:358  */
+#line 165 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -457,8 +459,8 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    34,    34,    35,    36,    37,    38,    39,    40,    41,
-      42,    43
+       0,    36,    36,    37,    38,    39,    40,    41,    42,    43,
+      44,    45
 };
 #endif
 
@@ -1237,67 +1239,67 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 34 "parser.y" /* yacc.c:1646  */
+#line 36 "parser.y" /* yacc.c:1646  */
     {exit(1); return 1;}
-#line 1243 "parser.tab.c" /* yacc.c:1646  */
+#line 1245 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 35 "parser.y" /* yacc.c:1646  */
+#line 37 "parser.y" /* yacc.c:1646  */
     {runCD((yyvsp[-1].string)); return 1;}
-#line 1249 "parser.tab.c" /* yacc.c:1646  */
+#line 1251 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 36 "parser.y" /* yacc.c:1646  */
+#line 38 "parser.y" /* yacc.c:1646  */
     {runLS(); return 1;}
-#line 1255 "parser.tab.c" /* yacc.c:1646  */
+#line 1257 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 37 "parser.y" /* yacc.c:1646  */
+#line 39 "parser.y" /* yacc.c:1646  */
     {runSetAlias((yyvsp[-2].string), (yyvsp[-1].string)); return 1;}
-#line 1261 "parser.tab.c" /* yacc.c:1646  */
+#line 1263 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 38 "parser.y" /* yacc.c:1646  */
+#line 40 "parser.y" /* yacc.c:1646  */
     {listAlias(); return 1;}
-#line 1267 "parser.tab.c" /* yacc.c:1646  */
+#line 1269 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 39 "parser.y" /* yacc.c:1646  */
+#line 41 "parser.y" /* yacc.c:1646  */
     {runUnalias((yyvsp[-1].string)); return 1;}
-#line 1273 "parser.tab.c" /* yacc.c:1646  */
+#line 1275 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 40 "parser.y" /* yacc.c:1646  */
+#line 42 "parser.y" /* yacc.c:1646  */
     {createTable((yyvsp[0].string)); yyparse(); return 1;}
-#line 1279 "parser.tab.c" /* yacc.c:1646  */
+#line 1281 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 41 "parser.y" /* yacc.c:1646  */
+#line 43 "parser.y" /* yacc.c:1646  */
     {addOutFile((yyvsp[0].string)); yyparse(); return 1;}
-#line 1285 "parser.tab.c" /* yacc.c:1646  */
+#line 1287 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 42 "parser.y" /* yacc.c:1646  */
+#line 44 "parser.y" /* yacc.c:1646  */
     {addInFile((yyvsp[0].string)); yyparse(); return 1;}
-#line 1291 "parser.tab.c" /* yacc.c:1646  */
+#line 1293 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 43 "parser.y" /* yacc.c:1646  */
+#line 45 "parser.y" /* yacc.c:1646  */
     {executeCmd(); clrTable(); return 1;}
-#line 1297 "parser.tab.c" /* yacc.c:1646  */
+#line 1299 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1301 "parser.tab.c" /* yacc.c:1646  */
+#line 1303 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1525,7 +1527,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 45 "parser.y" /* yacc.c:1906  */
+#line 47 "parser.y" /* yacc.c:1906  */
 
 
 int yyerror(char *s) {
@@ -1682,10 +1684,7 @@ int addInFile(char *fileName) {
         strcpy(cmdTable.fileIn, fileName);
     }
 
-    in = dup(STDIN_FILENO);
-
-    
-    //wait(NULL);
+//    in = dup(STDIN_FILENO);
 
     return 1;
 }
@@ -1711,7 +1710,7 @@ int executeCmd() {
 
             if(cmdTable.isIn == 1) {
                 int fd0 = open(cmdTable.fileIn, O_RDONLY);
-                dup2(fd0, 0);
+                dup2(fd0, STDIN_FILENO);
                 close(fd0);
                 cmdTable.isIn = 0;
                 yyparse();

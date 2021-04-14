@@ -25,3 +25,5 @@ struct cTable cmdTable;
 int aliasIndex, varIndex, cmdFill;
 int in;
 char* subAliases(char* name);
+void printPrompt();
+void init();
