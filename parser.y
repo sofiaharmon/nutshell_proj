@@ -26,7 +26,7 @@ int clrTable();
 int handleErrRed(char* dest);
 int handleAppend(char *fileName);
 int setenv(const char * var, const char * word, int overwrite);
-int unsetenv(const char * var)
+int unsetenv(const char * var);
 int printenv();
 int piping();
 %}
@@ -400,30 +400,24 @@ int unsetenv(const char * var){
 
 }
 
-int piping(char* inFile, char* outFile){
-    int pipefd[2], status;
+int piping(){
+    int pipefd[2];
     pid_t pid;
 
     pipe(pipefd);
     pid = fork();
 
-    if (pid == 0){
-        close(pipefd[1]);
-        read(pipefd[0], inFile, strlen(inFile));
-        close(pipefd[0]);
+    if (pid == -1){
+        printf("theres been a forking error");
     }
 
-    pid = fork();
+    if (pid == 0){
+        close(pipefd[1]);
+        dup2(pipefd[0], 0);
+    }
 
     else{
         close(pipefd[0]);
-        write(pipefd[1], outFile, strlen(outFile));
-        close(pipefd[1]);
+        dup2(pipefd[1], 1);
     }
-
-    close(pipefd[0]);
-    close(pipefd[1]);
-
-    waitpid(-1, &status, 0);
-    waitpid(-1, &status, 0);
 }
