@@ -3,6 +3,8 @@
 #include <string.h>
 #include "vars.h"
 #include <stdbool.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 char* subAliases(char* name){
     for (int i = 0; i < aliasIndex; i++) {
@@ -76,6 +78,22 @@ unalias             { return UNALIAS; }
                         unput( yycopy[i] );
                       }
                       free( yycopy );
+                    }
+[~]{CHAR}+          { struct passwd* pw;
+                      if( ( pw = getpwnam( yytext+1 ) ) != NULL ) {
+                        char *yycopy =  strdup(pw->pw_dir);
+                        for ( int i = strlen(yycopy) - 1; i >= 0; --i ) {
+                          unput( yycopy[i] );
+                        }
+                        free( yycopy );
+                      }
+                      else {
+                          char *yycopy =  strdup(subEnv("HOME"));
+                          for ( int i = strlen(yycopy) - 1; i >= 0; --i ) {
+                            unput( yycopy[i] );
+                          }
+                          free( yycopy );
+                      }
                     }
 [2][>]{ANYCHAR}+    { yylval.string = strdup(yytext + 2); return ERR; }
 [$]/[\{]            {BEGIN(env_condition);}

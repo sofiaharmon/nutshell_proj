@@ -25,6 +25,7 @@ int executeCmd();
 int clrTable();
 int handleErrRed(char* dest);
 int handleAppend(char *fileName);
+
 %}
 
 %union {char *string;}
@@ -174,15 +175,55 @@ int createTable(char* arg) {
     
     if (cmdFill == 0) {
 
+        //executable in current dir
         if (strstr(arg, "./")) {
             strcpy(cmdTable.cmdName, arg);
         }
+
+        //look through paths in PATH env for cmd
         else {
-            char path[225];
-            strcpy(path, "/bin/");
-            strcat(path, arg);
-            strcpy(cmdTable.cmdName, path);
+            char * envPath = strdup(varTable.word[3]);
+            char *pathT = strtok(envPath, ":");
+            int found = 0;
+   
+            //make sure there is a path to be checking & we havent found the cmd yet
+            while( pathT != NULL && found == 0 ) {
+                
+
+                //open path found in env var
+
+                struct dirent **namelist;
+                int n;
+
+                n = scandir(pathT, &namelist, NULL, alphasort);
+
+                if (n == -1) {
+                    perror("scandir");
+                    exit(EXIT_FAILURE);
+                }
+
+                while (n--) {
+                    if (strcmp(namelist[n]->d_name, arg) == 0) {
+                            strcat(pathT, "/");
+                            strcat(pathT, arg);
+                            strcpy(cmdTable.cmdName, pathT);
+                            found = 1;
+                    }
+                    free(namelist[n]);
+                }
+                free(namelist);
+                
+                //find next path in env
+                char *temp = strtok(NULL, ":");
+                //if there is another path then set pathT to it, else set pathT to null to avoid infinite loop
+                if (temp) { strcpy(pathT, temp); }
+                else { pathT = NULL; }
+            }
+            if (found == 0) {
+                printf("Command not found\n");
+            }
         }
+       
         cmdFill = 1;
         strcpy(cmdTable.args[0], arg);
         cmdTable.argCount = 1;
@@ -294,8 +335,7 @@ int executeCmd() {
 
             int check = execve(cmdTable.cmdName, newArg, env_args);
             if (check < 0) {
-                perror("execve");
-                printf("%s: No such file or directory\n", cmdTable.cmdName);
+                //printf("%s: No such file or directory\n", cmdTable.cmdName);
                 exit(EXIT_FAILURE);
             }
         }
