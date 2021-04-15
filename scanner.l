@@ -39,9 +39,11 @@ PIPE            [|]
 FILE_OUT        [>]
 FILE_IN         [<]
 BACKGROUND      [&]
+STDERR          [2]/[>]
 
 %x string_condition
 %x env_condition
+%x err_condition
 
 %%
 
@@ -58,6 +60,10 @@ BACKGROUND      [&]
                                     BEGIN(INITIAL);
                                  }
 
+<err_condition>[>]              {}
+<err_condition>{CHAR}+          { yylval.string = strdup(yytext); return ERR; }
+<err_condition>[ ]|[\t]|[\n]    {BEGIN(INITIAL);}
+
 [ ]		            { }
 bye                 { return BYE; }
 cd		            { return CD; }
@@ -72,8 +78,9 @@ unalias             { return UNALIAS; }
                       }
                       free( yycopy );
                     }
-[$]/[\{]                {BEGIN(env_condition);}
-{CHAR}+              {if(ifAlias(yytext)) {
+[2][>]{ANYCHAR}+    { yylval.string = strdup(yytext + 2); return ERR; }
+[$]/[\{]            {BEGIN(env_condition);}
+{CHAR}+             {if(ifAlias(yytext)) {
                         printf("yytext before sub: %s\n", yytext);
                            char *yycopy = strdup( subAliases(yytext) );
                            for ( int i = strlen(subAliases(yytext)) - 1; i >= 0; --i )

@@ -14,6 +14,8 @@ struct cTable {
     char args[128][100];
     int isIn;
     int isOut;
+    int isErr;
+    char fileErr[100];
     char fileIn[100];
     char fileOut[100];
 };

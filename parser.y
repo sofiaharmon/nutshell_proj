@@ -23,12 +23,13 @@ int addOutFile(char *fileName);
 int addInFile(char *fileName);
 int executeCmd();
 int clrTable();
+int handleErrRed(char* dest);
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> ALIAS BYE CD END IN LS OUT STRING UNALIAS
+%token <string> ALIAS BYE CD END ERR IN LS OUT STRING UNALIAS
 
 %%
 
@@ -42,6 +43,7 @@ cmd_line    :
     | STRING                        {createTable($1); yyparse(); return 1;}
     | OUT STRING                    {addOutFile($2); yyparse(); return 1;}
     | IN STRING                     {addInFile($2); yyparse(); return 1;}
+    | ERR                           {handleErrRed($1); yyparse(); return 1;}
     | END                           {executeCmd(); clrTable(); return 1;}
 
 %%
@@ -176,6 +178,7 @@ int createTable(char* arg) {
         cmdTable.argCount = 1;
         cmdTable.isIn = 0;
         cmdTable.isOut = 0;
+        cmdTable.isErr = 0;
     }
     else {
         strcpy(cmdTable.args[cmdTable.argCount], arg);
@@ -200,13 +203,11 @@ int addInFile(char *fileName) {
         strcpy(cmdTable.fileIn, fileName);
     }
 
-//    in = dup(STDIN_FILENO);
-
     return 1;
 }
 
 int executeCmd() {
-    
+    printf("val of isErr: %s\n", cmdTable.fileErr);
     if (cmdFill == 1) {
         if (fork() == 0) {
             
@@ -223,6 +224,31 @@ int executeCmd() {
                     close(fd);
                 }
             }
+
+            if(cmdTable.isErr == 1) {
+                if (strcmp(cmdTable.fileErr, "&1") == 0) {
+                    dup2(STDOUT_FILENO, STDERR_FILENO);
+            
+                    if (STDOUT_FILENO != STDERR_FILENO) {
+                        close(STDOUT_FILENO);
+                    }
+                }
+                else {
+                    int fd2;
+
+                    fd2 = creat(cmdTable.fileErr, 0644);
+                    if (fd2 < 0) {
+                        printf("error opening %s\n", cmdTable.fileOut);
+                    }
+                    dup2(fd2, STDERR_FILENO);
+                
+                    if (fd2 != STDERR_FILENO) {
+                        close(fd2);
+                    }
+                }
+            }
+
+            
 
             if(cmdTable.isIn == 1) {
                 int fd0 = open(cmdTable.fileIn, O_RDONLY);
@@ -271,8 +297,18 @@ int clrTable() {
         cmdTable.argCount = 0;
         cmdTable.isOut = 0;
         cmdTable.isIn = 0;
+        cmdTable.isErr = 0;
         strcpy(cmdTable.fileIn, "");
         strcpy(cmdTable.fileOut, "");
     }
+    return 1;
+}
+
+int handleErrRed(char* dest) {
+    if (dest) {
+        cmdTable.isErr = 1;
+        strcpy(cmdTable.fileErr, dest);
+    }
+
     return 1;
 }

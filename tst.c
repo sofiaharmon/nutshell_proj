@@ -10,5 +10,7 @@ int main(int argc, char *argv[])
         printf("arg[%d]: %s\n", i, argv[i]);
     }
 
+    fprintf( stderr, "error i think\n");
+
     exit(EXIT_SUCCESS);
 }
