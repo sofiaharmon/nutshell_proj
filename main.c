@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <limits.h>
 char *getcwd(char *buf, size_t size);
+int yyparse();
 
 int main()
 {
