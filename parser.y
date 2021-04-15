@@ -30,14 +30,13 @@ int handleAppend(char *fileName);
 %union {char *string;}
 
 %start cmd_line
-%token <string> ALIAS APPEND BYE CD END ERR IN LS OUT STRING UNALIAS
+%token <string> ALIAS APPEND BYE CD END ERR IN OUT STRING UNALIAS
 
 %%
 
 cmd_line    :
     BYE END                         {exit(1); return 1;}
     | CD STRING END                 {runCD($2); return 1;}
-    | LS END                        {runLS(); return 1;}
     | ALIAS STRING STRING END		{runSetAlias($2, $3); return 1;}
     | ALIAS END                     {listAlias(); return 1;}
     | UNALIAS STRING END            {runUnalias($2); return 1;}
@@ -174,7 +173,16 @@ int runUnalias(char *arg) {
 int createTable(char* arg) {
     
     if (cmdFill == 0) {
-        strcpy(cmdTable.cmdName, arg);
+
+        if (strstr(arg, "./")) {
+            strcpy(cmdTable.cmdName, arg);
+        }
+        else {
+            char path[225];
+            strcpy(path, "/bin/");
+            strcat(path, arg);
+            strcpy(cmdTable.cmdName, path);
+        }
         cmdFill = 1;
         strcpy(cmdTable.args[0], arg);
         cmdTable.argCount = 1;
@@ -209,7 +217,6 @@ int addInFile(char *fileName) {
 }
 
 int executeCmd() {
-    printf("val of isErr: %s\n", cmdTable.fileErr);
     if (cmdFill == 1) {
         if (fork() == 0) {
             

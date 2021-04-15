@@ -67,7 +67,6 @@ STDERR          [2]/[>]
 [ ]		            { }
 bye                 { return BYE; }
 cd		            { return CD; }
-ls                  { return LS; }
 alias		        { return ALIAS; }
 unalias             { return UNALIAS; }
 "\n"		        { return END; }
@@ -95,4 +94,5 @@ unalias             { return UNALIAS; }
 {FILE_OUT}          { return OUT; }
 {FILE_IN}           { return IN; }
 {FILE_OUT}+         { return APPEND; }
+
 %%
