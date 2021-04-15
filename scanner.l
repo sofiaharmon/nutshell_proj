@@ -94,4 +94,5 @@ unalias             { return UNALIAS; }
                     }
 {FILE_OUT}          { return OUT; }
 {FILE_IN}           { return IN; }
+{FILE_OUT}+         { return APPEND; }
 %%

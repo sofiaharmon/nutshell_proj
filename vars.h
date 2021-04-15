@@ -15,6 +15,8 @@ struct cTable {
     int isIn;
     int isOut;
     int isErr;
+    int isApp;
+    char fileApp[100];
     char fileErr[100];
     char fileIn[100];
     char fileOut[100];

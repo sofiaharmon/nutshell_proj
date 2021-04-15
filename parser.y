@@ -24,12 +24,13 @@ int addInFile(char *fileName);
 int executeCmd();
 int clrTable();
 int handleErrRed(char* dest);
+int handleAppend(char *fileName);
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> ALIAS BYE CD END ERR IN LS OUT STRING UNALIAS
+%token <string> ALIAS APPEND BYE CD END ERR IN LS OUT STRING UNALIAS
 
 %%
 
@@ -44,6 +45,7 @@ cmd_line    :
     | OUT STRING                    {addOutFile($2); yyparse(); return 1;}
     | IN STRING                     {addInFile($2); yyparse(); return 1;}
     | ERR                           {handleErrRed($1); yyparse(); return 1;}
+    | APPEND STRING                 {handleAppend($2); yyparse(); return 1;}
     | END                           {executeCmd(); clrTable(); return 1;}
 
 %%
@@ -248,7 +250,19 @@ int executeCmd() {
                 }
             }
 
+            if(cmdTable.isApp == 1) {
+                int appF;
+
+                appF = open(cmdTable.fileApp, O_RDWR|O_APPEND);
+                if (appF < 0) {
+                    printf("error opening app %s\n", cmdTable.fileOut);
+                }
+                dup2(appF, STDOUT_FILENO);
             
+                if (appF != STDOUT_FILENO) {
+                    close(appF);
+                }
+            }
 
             if(cmdTable.isIn == 1) {
                 int fd0 = open(cmdTable.fileIn, O_RDONLY);
@@ -308,6 +322,15 @@ int handleErrRed(char* dest) {
     if (dest) {
         cmdTable.isErr = 1;
         strcpy(cmdTable.fileErr, dest);
+    }
+
+    return 1;
+}
+
+int handleAppend(char* fileName) {
+    if (fileName) {
+        cmdTable.isApp = 1;
+        strcpy(cmdTable.fileApp, fileName);
     }
 
     return 1;

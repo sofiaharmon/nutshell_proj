@@ -46,15 +46,16 @@ extern int yydebug;
   enum yytokentype
   {
     ALIAS = 258,
-    BYE = 259,
-    CD = 260,
-    END = 261,
-    ERR = 262,
-    IN = 263,
-    LS = 264,
-    OUT = 265,
-    STRING = 266,
-    UNALIAS = 267
+    APPEND = 259,
+    BYE = 260,
+    CD = 261,
+    END = 262,
+    ERR = 263,
+    IN = 264,
+    LS = 265,
+    OUT = 266,
+    STRING = 267,
+    UNALIAS = 268
   };
 #endif
 
@@ -63,10 +64,10 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 29 "parser.y" /* yacc.c:1909  */
+#line 30 "parser.y" /* yacc.c:1909  */
 char *string;
 
-#line 70 "parser.tab.h" /* yacc.c:1909  */
+#line 71 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
