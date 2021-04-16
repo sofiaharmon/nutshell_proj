@@ -320,8 +320,7 @@ int executeCmd() {
 
             int check = execve(cmdTable.cmdName, newArg, env_args);
             if (check < 0) {
-                printf("%s: No such file or directory\n", cmdTable.cmdName);
-                return 1;
+                exit(EXIT_FAILURE);
             }
         }
         else {
