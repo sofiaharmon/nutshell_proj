@@ -14,7 +14,6 @@
 int yylex();
 int yyerror(char *s);
 int runCD(char* arg);
-int runLS();
 int runSetAlias(char *name, char *word);
 int listAlias();
 int runUnalias(char *arg); 
@@ -25,13 +24,17 @@ int executeCmd();
 int clrTable();
 int handleErrRed(char* dest);
 int handleAppend(char *fileName);
+int runsetenv(const char * var, const char * word);
+int unsetenv(const char * var);
+int printenv();
+int setBackground();
 
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> ALIAS APPEND BYE CD END ERR IN OUT STRING UNALIAS
+%token <string> ALIAS APPEND BACKGROUND BYE CD END ERR IN OUT PRINTENV SETENV STRING UNALIAS UNSETENV
 
 %%
 
@@ -41,17 +44,20 @@ cmd_line    :
     | ALIAS STRING STRING END		{runSetAlias($2, $3); return 1;}
     | ALIAS END                     {listAlias(); return 1;}
     | UNALIAS STRING END            {runUnalias($2); return 1;}
+    | SETENV STRING STRING END      {runsetenv($2, $3); return 1;}
+    | UNSETENV STRING END           {unsetenv($2); return 1;}
+    | PRINTENV END                  {printenv(); return 1;}
     | STRING                        {createTable($1); yyparse(); return 1;}
     | OUT STRING                    {addOutFile($2); yyparse(); return 1;}
     | IN STRING                     {addInFile($2); yyparse(); return 1;}
     | ERR                           {handleErrRed($1); yyparse(); return 1;}
+    | BACKGROUND END                {setBackground(); return 1;}
     | APPEND STRING                 {handleAppend($2); yyparse(); return 1;}
     | END                           {executeCmd(); clrTable(); return 1;}
 
 %%
 
 int yyerror(char *s) {
-    //printf("%s\n", s);
     return 0;
 }
 
@@ -114,28 +120,6 @@ int runSetAlias(char *name, char *word) {
 	aliasIndex++;
 
 	return 1;
-}
-
-int runLS() {
-    
-    struct dirent **namelist;
-    int n;
-
-    n = scandir(".", &namelist, NULL, alphasort);
-
-    if (n == -1) {
-        perror("scandir");
-        exit(EXIT_FAILURE);
-    }
-
-    while (n--) {
-        printf("%s\n", namelist[n]->d_name);
-        free(namelist[n]);
-    }
-    free(namelist);
-
-
-    return 1;
 }
 
 int listAlias() {
@@ -230,6 +214,7 @@ int createTable(char* arg) {
         cmdTable.isIn = 0;
         cmdTable.isOut = 0;
         cmdTable.isErr = 0;
+        cmdTable.backgroundVal = 0;
     }
     else {
         strcpy(cmdTable.args[cmdTable.argCount], arg);
@@ -266,7 +251,7 @@ int executeCmd() {
 
                 fd = creat(cmdTable.fileOut, 0644);
                 if (fd < 0) {
-                    printf("error opening %s\n", cmdTable.fileOut);
+                    printf("Error opening %s\n", cmdTable.fileOut);
                 }
                 dup2(fd, STDOUT_FILENO);
             
@@ -288,7 +273,7 @@ int executeCmd() {
 
                     fd2 = creat(cmdTable.fileErr, 0644);
                     if (fd2 < 0) {
-                        printf("error opening %s\n", cmdTable.fileOut);
+                        printf("Error opening %s\n", cmdTable.fileOut);
                     }
                     dup2(fd2, STDERR_FILENO);
                 
@@ -303,7 +288,7 @@ int executeCmd() {
 
                 appF = open(cmdTable.fileApp, O_RDWR|O_APPEND);
                 if (appF < 0) {
-                    printf("error opening app %s\n", cmdTable.fileOut);
+                    printf("Error opening %s\n", cmdTable.fileOut);
                 }
                 dup2(appF, STDOUT_FILENO);
             
@@ -335,13 +320,14 @@ int executeCmd() {
 
             int check = execve(cmdTable.cmdName, newArg, env_args);
             if (check < 0) {
-                //printf("%s: No such file or directory\n", cmdTable.cmdName);
-                exit(EXIT_FAILURE);
+                printf("%s: No such file or directory\n", cmdTable.cmdName);
+                return 1;
             }
         }
         else {
-            wait(NULL);
-            
+            if(cmdTable.backgroundVal != 1) {
+                wait(NULL);
+            }
         }
     }
     return 1;
@@ -381,4 +367,55 @@ int handleAppend(char* fileName) {
     }
 
     return 1;
+}
+
+int printenv(){
+
+	for (int i = 0; i < varIndex; i++) {
+        printf("%s = \"%s\"\n", varTable.var[i], varTable.word[i]);
+    }
+
+	return 1;
+
+}
+
+int runsetenv(const char * var, const char * word){
+	for (int i = 0; i < varIndex; i++) {
+		if(strcmp(var, word) == 0){
+			printf("Cannot set, already exists\n");
+			return 1;
+		}
+		else if((strcmp(varTable.var[i], var) == 0)){
+			strcpy(varTable.word[i], word);
+			return 1;
+		}
+		else
+			continue;
+	}
+	strcpy(varTable.var[varIndex], var);
+	strcpy(varTable.word[varIndex], word);
+	varIndex++;
+
+	return 1;
+}
+
+int setBackground(){
+    cmdTable.backgroundVal = 1; 
+    return 1;
+}
+
+int unsetenv(const char * var){
+
+	for (int i = 0; i < varIndex; i++) {
+		if((strcmp(varTable.var[i], var) == 0)){
+			varIndex--;
+			for (i = i; i < varIndex; i++) {
+				strcpy(varTable.word[i], varTable.word[i+1]);
+				strcpy(varTable.var[i], varTable.var[i+1]);
+			}
+		}
+	}
+
+	return 1;
+
 }

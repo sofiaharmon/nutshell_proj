@@ -3,14 +3,13 @@
 
 int main(int argc, char *argv[])
 {
-
     printf("test file:\n");
     
     for (int i = 0; i < argc; i++) {
         printf("arg[%d]: %s\n", i, argv[i]);
     }
 
-    fprintf( stderr, "error i think\n");
+    fprintf( stderr, "error msg\n");
 
-    exit(EXIT_SUCCESS);
+    return 1;
 }

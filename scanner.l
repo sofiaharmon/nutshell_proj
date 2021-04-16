@@ -40,7 +40,7 @@ ANYCHAR         [)(*&%$#@!`;,\.a-zA-Z0-9'/*_=~ -][)(*&%$#@!`;,\.a-zA-Z0-9'/*_=~ 
 PIPE            [|]
 FILE_OUT        [>]
 FILE_IN         [<]
-BACKGROUND      [&]
+BG              [&]
 STDERR          [2]/[>]
 
 %x string_condition
@@ -71,6 +71,9 @@ bye                 { return BYE; }
 cd		            { return CD; }
 alias		        { return ALIAS; }
 unalias             { return UNALIAS; }
+setenv              { return SETENV;}
+printenv            { return PRINTENV;}
+unsetenv            { return UNSETENV;}
 "\n"		        { return END; }
 [\"]                { BEGIN(string_condition); }
 [~]                 { char *yycopy = strdup( subEnv("HOME") );
@@ -98,13 +101,11 @@ unalias             { return UNALIAS; }
 [2][>]{ANYCHAR}+    { yylval.string = strdup(yytext + 2); return ERR; }
 [$]/[\{]            {BEGIN(env_condition);}
 {CHAR}+             {if(ifAlias(yytext)) {
-                        printf("yytext before sub: %s\n", yytext);
                            char *yycopy = strdup( subAliases(yytext) );
                            for ( int i = strlen(subAliases(yytext)) - 1; i >= 0; --i )
                                unput( yycopy[i] );
                            free( yycopy );
                     } else {
-                        //printf("yytext: %s\n", yytext);
                         yylval.string = strdup(yytext);
                         return STRING;
                     };
@@ -112,5 +113,6 @@ unalias             { return UNALIAS; }
 {FILE_OUT}          { return OUT; }
 {FILE_IN}           { return IN; }
 {FILE_OUT}+         { return APPEND; }
+{BG}                { return BACKGROUND; }
 
 %%
